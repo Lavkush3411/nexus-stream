@@ -2,16 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/browse", label: "Browse" },
-  { href: "/search", label: "Search" },
   { href: "/watchlist", label: "Watchlist" },
 ];
+
+function NavbarSearch() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-9 w-full rounded-xl bg-surface-light animate-shimmer" />
+      }
+    >
+      <SearchBar />
+    </Suspense>
+  );
+}
 
 export function Navbar() {
   const pathname = usePathname();
@@ -20,10 +31,9 @@ export function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 md:px-8">
-          {/* Mobile menu toggle */}
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 md:px-8">
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
+            className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
             onClick={() => setDrawerOpen(true)}
             aria-label="Open navigation menu"
           >
@@ -32,7 +42,6 @@ export function Navbar() {
             </svg>
           </button>
 
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-crimson to-neon-blue flex items-center justify-center">
               <span className="text-white font-bold text-sm">N</span>
@@ -42,8 +51,7 @@ export function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1 ml-4">
+          <nav className="hidden md:flex items-center gap-1 ml-2">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -60,25 +68,13 @@ export function Navbar() {
             ))}
           </nav>
 
-          {/* Search — desktop */}
-          <div className="hidden md:block flex-1 max-w-md ml-auto">
-            <SearchBar />
+          {/* Global search — all screen sizes */}
+          <div className="flex-1 min-w-0 max-w-xl ml-auto">
+            <NavbarSearch />
           </div>
-
-          {/* Search icon — mobile */}
-          <Link
-            href="/search"
-            className="md:hidden ml-auto p-2 rounded-lg hover:bg-white/10 transition-colors"
-            aria-label="Search"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </Link>
         </div>
       </header>
 
-      {/* Mobile side drawer */}
       {drawerOpen && (
         <div className="fixed inset-0 z-[60] md:hidden">
           <div
@@ -101,11 +97,7 @@ export function Navbar() {
               </button>
             </div>
 
-            <div className="p-4">
-              <SearchBar />
-            </div>
-
-            <nav className="flex flex-col gap-1 px-4">
+            <nav className="flex flex-col gap-1 p-4">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
