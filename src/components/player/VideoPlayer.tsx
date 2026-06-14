@@ -27,7 +27,7 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const allUrls = [embedUrl, ...fallbackUrls.filter((u) => u !== embedUrl)];
   const [sourceIndex, setSourceIndex] = useState(0);
-  const [useProxy, setUseProxy] = useState(true);
+  const [useProxy, setUseProxy] = useState(false);
   const currentUrl = allUrls[sourceIndex] ?? embedUrl;
   const hasMoreSources = sourceIndex < allUrls.length - 1;
 
