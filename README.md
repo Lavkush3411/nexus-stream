@@ -63,8 +63,8 @@ src/
 ## Architecture Notes
 
 - **API Proxy** — All TMDB requests flow through `/api/tmdb/*` so the API key never reaches the browser.
-- **VidSrc Embeds** — Movies: `https://vidsrc.to/embed/movie/{id}`. TV: `https://vidsrc.to/embed/tv/{id}/{season}/{episode}`.
-- **Iframe Sandbox** — `sandbox="allow-scripts allow-same-origin allow-forms"` blocks unauthorized popups and top-level navigation from third-party ad scripts.
+- **VidSrc Embeds** — Uses current official domains (`vidsrcme.su`, `vidsrc.me`, etc.). Movies: `/embed/movie?imdb={id}` or `/embed/movie/{id}`. TV: `/embed/tv/{id}/{season}/{episode}`.
+- **No iframe sandbox** — VidSrc's `sbx.js` detects sandboxed iframes and shows "media unavailable." Player loads only after explicit user click.
 
 ## Tech Stack
 

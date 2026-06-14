@@ -12,8 +12,8 @@ import {
   CarouselSkeleton,
 } from "@/components/ui/Skeleton";
 import { CinemaMode } from "@/components/player/CinemaMode";
-import { getTrending, getTopRated, getLatestTV } from "@/lib/api-client";
-import { getMovieEmbedUrl } from "@/lib/vidsrc";
+import { getTrending, getTopRated, getLatestTV, getMovieExternalIds } from "@/lib/api-client";
+import { getEmbedFallbackUrls } from "@/lib/vidsrc";
 import { getDisplayTitle } from "@/lib/utils";
 import { useUserData } from "@/context/UserDataContext";
 import type { TMDBMediaItem } from "@/types/tmdb";
@@ -28,7 +28,7 @@ export default function HomePage() {
   const [latestTV, setLatestTV] = useState<TMDBMediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [playerOpen, setPlayerOpen] = useState(false);
-  const [embedUrl, setEmbedUrl] = useState("");
+  const [embedUrls, setEmbedUrls] = useState<string[]>([]);
   const [playerTitle, setPlayerTitle] = useState("");
 
   useEffect(() => {
@@ -66,9 +66,17 @@ export default function HomePage() {
     }
   };
 
-  const openMoviePlayer = (item: TMDBMediaItem) => {
+  const openMoviePlayer = async (item: TMDBMediaItem) => {
     const title = getDisplayTitle(item);
-    setEmbedUrl(getMovieEmbedUrl(item.id));
+    let imdbId: string | null = null;
+    try {
+      const externalIds = await getMovieExternalIds(item.id);
+      imdbId = externalIds.imdb_id;
+    } catch {
+      /* fall back to TMDB-only URLs */
+    }
+    const urls = getEmbedFallbackUrls({ tmdbId: item.id, imdbId });
+    setEmbedUrls(urls);
     setPlayerTitle(title);
     setPlayerOpen(true);
 
@@ -125,9 +133,10 @@ export default function HomePage() {
       <MediaCarousel title="Top Rated Movies" items={topRated} />
       <MediaCarousel title="Latest TV Drops" items={latestTV} />
 
-      {playerOpen && (
+      {playerOpen && embedUrls[0] && (
         <CinemaMode
-          embedUrl={embedUrl}
+          embedUrl={embedUrls[0]}
+          fallbackUrls={embedUrls.slice(1)}
           title={playerTitle}
           onClose={() => setPlayerOpen(false)}
         />

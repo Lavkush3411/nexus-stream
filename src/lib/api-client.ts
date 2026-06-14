@@ -121,3 +121,11 @@ export function getTVSeason(tvId: number, seasonNumber: number) {
     `/tv/${tvId}/season/${seasonNumber}`
   );
 }
+
+export function getMovieExternalIds(id: number) {
+  return clientFetch<{ imdb_id: string | null }>(`/movie/${id}/external_ids`);
+}
+
+export function getTVExternalIds(id: number) {
+  return clientFetch<{ imdb_id: string | null }>(`/tv/${id}/external_ids`);
+}

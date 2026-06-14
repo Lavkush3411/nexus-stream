@@ -13,9 +13,10 @@ import {
   getTVCredits,
   getSimilarTV,
   getTVSeason,
+  getTVExternalIds,
 } from "@/lib/api-client";
 import { getImageUrl } from "@/lib/tmdb";
-import { getTvEmbedUrl } from "@/lib/vidsrc";
+import { getEmbedFallbackUrls } from "@/lib/vidsrc";
 import { formatDate, formatRating } from "@/lib/utils";
 import { useUserData } from "@/context/UserDataContext";
 import type {
@@ -44,18 +45,20 @@ export default function TVDetailPage() {
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
   const [loading, setLoading] = useState(true);
   const [cinemaOpen, setCinemaOpen] = useState(false);
-  const [embedUrl, setEmbedUrl] = useState("");
+  const [embedUrls, setEmbedUrls] = useState<string[]>([]);
+  const [imdbId, setImdbId] = useState<string | null>(null);
   const [playerTitle, setPlayerTitle] = useState("");
   const [playerSubtitle, setPlayerSubtitle] = useState("");
 
   useEffect(() => {
     if (!id || isNaN(id)) return;
 
-    Promise.all([getTVDetails(id), getTVCredits(id), getSimilarTV(id)])
-      .then(([details, creds, sim]) => {
+    Promise.all([getTVDetails(id), getTVCredits(id), getSimilarTV(id), getTVExternalIds(id)])
+      .then(([details, creds, sim, externalIds]) => {
         setShow(details);
         setCredits(creds);
         setSimilar(sim.results);
+        setImdbId(externalIds.imdb_id);
         const firstSeason = details.seasons.find((s) => s.season_number > 0);
         if (firstSeason) setSelectedSeason(firstSeason.season_number);
       })
@@ -89,8 +92,13 @@ export default function TVDetailPage() {
     episode: number,
     episodeName: string
   ) => {
-    const url = getTvEmbedUrl(show.id, season, episode);
-    setEmbedUrl(url);
+    const urls = getEmbedFallbackUrls({
+      tmdbId: show.id,
+      imdbId,
+      season,
+      episode,
+    });
+    setEmbedUrls(urls);
     setPlayerTitle(show.name);
     setPlayerSubtitle(`S${season} E${episode} — ${episodeName}`);
     setCinemaOpen(true);
@@ -240,9 +248,10 @@ export default function TVDetailPage() {
         <SimilarGrid title="Similar Shows" items={similar} mediaType="tv" />
       </div>
 
-      {cinemaOpen && (
+      {cinemaOpen && embedUrls[0] && (
         <CinemaMode
-          embedUrl={embedUrl}
+          embedUrl={embedUrls[0]}
+          fallbackUrls={embedUrls.slice(1)}
           title={playerTitle}
           subtitle={playerSubtitle}
           onClose={() => setCinemaOpen(false)}

@@ -12,9 +12,10 @@ import {
   getMovieDetails,
   getMovieCredits,
   getSimilarMovies,
+  getMovieExternalIds,
 } from "@/lib/api-client";
 import { getImageUrl } from "@/lib/tmdb";
-import { getMovieEmbedUrl } from "@/lib/vidsrc";
+import { getEmbedFallbackUrls } from "@/lib/vidsrc";
 import { formatDate, formatRating, formatRuntime } from "@/lib/utils";
 import { useUserData } from "@/context/UserDataContext";
 import type { TMDBMovieDetails, TMDBCredits, TMDBMediaItem } from "@/types/tmdb";
@@ -36,6 +37,7 @@ export default function MovieDetailPage() {
   const [loading, setLoading] = useState(true);
   const [cinemaOpen, setCinemaOpen] = useState(false);
   const [inlinePlayer, setInlinePlayer] = useState(false);
+  const [embedUrls, setEmbedUrls] = useState<string[]>([]);
 
   useEffect(() => {
     if (!id || isNaN(id)) return;
@@ -44,11 +46,15 @@ export default function MovieDetailPage() {
       getMovieDetails(id),
       getMovieCredits(id),
       getSimilarMovies(id),
+      getMovieExternalIds(id),
     ])
-      .then(([details, creds, sim]) => {
+      .then(([details, creds, sim, externalIds]) => {
         setMovie(details);
         setCredits(creds);
         setSimilar(sim.results);
+        setEmbedUrls(
+          getEmbedFallbackUrls({ tmdbId: id, imdbId: externalIds.imdb_id })
+        );
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -64,7 +70,8 @@ export default function MovieDetailPage() {
   }
 
   const inWatchlist = isInWatchlist(movie.id, "movie");
-  const embedUrl = getMovieEmbedUrl(movie.id);
+  const primaryEmbedUrl = embedUrls[0] ?? "";
+  const fallbackEmbedUrls = embedUrls.slice(1);
 
   const handlePlay = () => {
     setInlinePlayer(true);
@@ -182,9 +189,13 @@ export default function MovieDetailPage() {
             </div>
 
             {/* Inline player section */}
-            {inlinePlayer && !cinemaOpen && (
+            {inlinePlayer && !cinemaOpen && primaryEmbedUrl && (
               <div className="mt-8">
-                <VideoPlayer embedUrl={embedUrl} title={movie.title} />
+                <VideoPlayer
+                  embedUrl={primaryEmbedUrl}
+                  fallbackUrls={fallbackEmbedUrls}
+                  title={movie.title}
+                />
               </div>
             )}
           </div>
@@ -194,9 +205,10 @@ export default function MovieDetailPage() {
         <SimilarGrid title="Recommended" items={similar} mediaType="movie" />
       </div>
 
-      {cinemaOpen && (
+      {cinemaOpen && primaryEmbedUrl && (
         <CinemaMode
-          embedUrl={embedUrl}
+          embedUrl={primaryEmbedUrl}
+          fallbackUrls={fallbackEmbedUrls}
           title={movie.title}
           onClose={() => setCinemaOpen(false)}
         />

@@ -1,20 +1,119 @@
 /**
  * VidSrc embed URL builder.
- * We never host video — these URLs point to third-party embed players.
  *
- * Format (per VidSrc spec):
- *   Movies:  https://vidsrc.to/embed/movie/{tmdb_id}
- *   TV:      https://vidsrc.to/embed/tv/{tmdb_id}/{season}/{episode}
+ * OFFICIAL DOMAIN STATUS (June 2026):
+ * - vidsrc.to / vidsrc.in — deprecated, frequently timeout or dead
+ * - Current domains per vidsrcme.ru/api: vidsrc-embed.ru, vidsrc-embed.su,
+ *   vidsrcme.su, vsrc.su (post-DMCA migration to .ru/.su TLDs)
+ * - Latest-movies JSON feed on vidsrcme.su uses vidsrc.me with ?imdb= / ?tmdb=
+ * - vidsrc-embed.ru redirects to vsembed.ru
+ *
+ * SANDBOX WARNING: VidSrc loads sbx.js which checks frameElement.sandbox and
+ * redirects to /sbx.html showing "This media is unavailable at the moment."
+ * The iframe MUST NOT use the sandbox attribute for VidSrc to work.
  */
 
-export function getMovieEmbedUrl(tmdbId: number | string): string {
-  return `https://vidsrc.to/embed/movie/${tmdbId}`;
+export type EmbedMediaType = "movie" | "tv";
+
+export interface EmbedOptions {
+  tmdbId: number | string;
+  imdbId?: string | null;
+  season?: number;
+  episode?: number;
+}
+
+/** Current official VidSrc embed bases (best-first). */
+const OFFICIAL_BASES = [
+  process.env.NEXT_PUBLIC_VIDSRC_BASE,
+  "https://vidsrcme.su",
+  "https://vidsrc.me",
+  "https://vidsrc-embed.ru",
+  "https://vidsrc-embed.su",
+  "https://vsrc.su",
+].filter(Boolean) as string[];
+
+function uniqueUrls(urls: string[]): string[] {
+  return [...new Set(urls.filter(Boolean))];
+}
+
+/** Path format: /embed/movie/{id} or /embed/tv/{id}/{season}/{episode} */
+function pathEmbed(
+  base: string,
+  type: EmbedMediaType,
+  id: string,
+  season?: number,
+  episode?: number
+): string {
+  if (type === "tv" && season !== undefined && episode !== undefined) {
+    // vidsrc-embed.ru also accepts dash format /tv/{id}/{season}-{episode}
+    return `${base}/embed/tv/${id}/${season}/${episode}`;
+  }
+  return `${base}/embed/movie/${id}`;
+}
+
+/** Query format used by vidsrc.me and vidsrc-embed.ru */
+function queryEmbed(
+  base: string,
+  type: EmbedMediaType,
+  tmdbId: number | string,
+  imdbId?: string | null,
+  season?: number,
+  episode?: number
+): string {
+  if (type === "tv" && season !== undefined && episode !== undefined) {
+    const params = new URLSearchParams({
+      season: String(season),
+      episode: String(episode),
+    });
+    if (imdbId) params.set("imdb", imdbId);
+    else params.set("tmdb", String(tmdbId));
+    return `${base}/embed/tv?${params.toString()}`;
+  }
+
+  if (imdbId) {
+    return `${base}/embed/movie?imdb=${imdbId}`;
+  }
+  return `${base}/embed/movie?tmdb=${tmdbId}`;
+}
+
+/** All candidate embed URLs, best-first. */
+export function getEmbedFallbackUrls(options: EmbedOptions): string[] {
+  const { tmdbId, imdbId, season, episode } = options;
+  const type: EmbedMediaType =
+    season !== undefined && episode !== undefined ? "tv" : "movie";
+  const urls: string[] = [];
+  const ids = imdbId ? [imdbId, String(tmdbId)] : [String(tmdbId)];
+
+  for (const base of OFFICIAL_BASES) {
+    // Query format (preferred on vidsrc.me / vidsrc-embed.ru)
+    if (base.includes("vidsrc.me") || base.includes("vidsrc-embed")) {
+      urls.push(queryEmbed(base, type, tmdbId, imdbId, season, episode));
+    }
+    // Path format (works on vidsrcme.su, vsrc.su)
+    for (const id of ids) {
+      urls.push(pathEmbed(base, type, id, season, episode));
+    }
+  }
+
+  return uniqueUrls(urls);
+}
+
+export function getPrimaryEmbedUrl(options: EmbedOptions): string {
+  return getEmbedFallbackUrls(options)[0];
+}
+
+export function getMovieEmbedUrl(
+  tmdbId: number | string,
+  imdbId?: string | null
+): string {
+  return getPrimaryEmbedUrl({ tmdbId, imdbId });
 }
 
 export function getTvEmbedUrl(
   tmdbId: number | string,
   season: number,
-  episode: number
+  episode: number,
+  imdbId?: string | null
 ): string {
-  return `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}`;
+  return getPrimaryEmbedUrl({ tmdbId, imdbId, season, episode });
 }

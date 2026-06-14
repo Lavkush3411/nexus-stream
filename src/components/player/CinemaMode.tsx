@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 
 interface CinemaModeProps {
   embedUrl: string;
+  fallbackUrls?: string[];
   title: string;
   subtitle?: string;
   onClose: () => void;
@@ -17,6 +18,7 @@ interface CinemaModeProps {
  */
 export function CinemaMode({
   embedUrl,
+  fallbackUrls,
   title,
   subtitle,
   onClose,
@@ -40,7 +42,6 @@ export function CinemaMode({
       aria-modal="true"
       aria-label={`Now playing: ${title}`}
     >
-      {/* Top bar */}
       <div className="flex items-center justify-between px-4 md:px-8 py-4 border-b border-white/10">
         <div>
           <h2 className="text-lg font-semibold text-white">{title}</h2>
@@ -62,13 +63,23 @@ export function CinemaMode({
         </Button>
       </div>
 
-      {/* Player */}
-      <div className="flex-1 flex items-center justify-center p-4 md:p-8">
+      <div className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-y-auto">
         <div className="w-full max-w-6xl">
-          <VideoPlayer embedUrl={embedUrl} title={title} />
-          <p className="mt-4 text-center text-xs text-white/40">
-            Streaming via third-party embed. NexusStream does not host any video content.
-          </p>
+          <VideoPlayer
+            embedUrl={embedUrl}
+            fallbackUrls={fallbackUrls}
+            title={title}
+          />
+
+          <div className="mt-4 space-y-2 text-center text-xs text-white/40">
+            <p>
+              Streaming via third-party embed. NexusStream does not host any video content.
+            </p>
+            <p>
+              If playback fails on one source, use &ldquo;Try alternate source&rdquo; to cycle
+              through VidSrc mirror domains.
+            </p>
+          </div>
         </div>
       </div>
     </div>
