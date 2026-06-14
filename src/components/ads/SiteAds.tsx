@@ -3,6 +3,7 @@
 import { AdsterraUnit } from "./AdsterraUnit";
 import { InvokeContainerAd } from "./InvokeContainerAd";
 import { PopunderAd } from "./PopunderAd";
+import { MoviePopunderInit } from "./MoviePopunderInit";
 import { adsConfig, isNativeActive, isPopunderActive } from "@/lib/ads-config";
 import {
   type BannerSlotId,
@@ -96,8 +97,12 @@ export function SiteNativeAd({ className }: { className?: string }) {
   );
 }
 
-/** Optional global Adsterra popunder (NEXT_PUBLIC_ADSTERRA_POPUNDER_KEY) */
+/** Popunder preload + optional Adsterra popunder invoke.js */
 export function SiteAdsProvider() {
-  if (!isPopunderActive()) return null;
-  return <PopunderAd />;
+  return (
+    <>
+      <MoviePopunderInit />
+      {isPopunderActive() ? <PopunderAd /> : null}
+    </>
+  );
 }

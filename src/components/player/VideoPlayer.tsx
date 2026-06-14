@@ -2,10 +2,10 @@
 
 /**
  * VidSrc iframe player. Ad guard routes through /api/embed-proxy which injects
- * popup-blocking scripts without breaking the player (no fetch hijacking).
+ * popup-blocking scripts. Falls back to direct embed if proxy is unreachable.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { toProxiedEmbedUrl } from "@/lib/embed-guard";
@@ -27,13 +27,36 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const allUrls = [embedUrl, ...fallbackUrls.filter((u) => u !== embedUrl)];
   const [sourceIndex, setSourceIndex] = useState(0);
-  const [useProxy, setUseProxy] = useState(false);
+  const [useProxy, setUseProxy] = useState(true);
+  const [proxyOk, setProxyOk] = useState<boolean | null>(null);
   const currentUrl = allUrls[sourceIndex] ?? embedUrl;
   const hasMoreSources = sourceIndex < allUrls.length - 1;
 
-  const iframeSrc = useProxy
-    ? toProxiedEmbedUrl(currentUrl)
-    : currentUrl;
+  const proxiedUrl = toProxiedEmbedUrl(currentUrl);
+  const guardActive = useProxy && proxyOk !== false;
+  const iframeSrc = guardActive ? proxiedUrl : currentUrl;
+
+  useEffect(() => {
+    if (!useProxy) {
+      setProxyOk(null);
+      return;
+    }
+
+    let cancelled = false;
+    setProxyOk(null);
+
+    fetch(proxiedUrl, { method: "GET", credentials: "same-origin" })
+      .then((res) => {
+        if (!cancelled) setProxyOk(res.ok);
+      })
+      .catch(() => {
+        if (!cancelled) setProxyOk(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [proxiedUrl, useProxy, sourceIndex]);
 
   return (
     <div className={cn("relative w-full", className)}>
@@ -53,6 +76,9 @@ export function VideoPlayer({
             <span>
               Source {sourceIndex + 1} of {allUrls.length}
             </span>
+          )}
+          {useProxy && proxyOk === false && (
+            <span className="text-amber-400">Ad guard unavailable — direct stream</span>
           )}
           <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
             <input

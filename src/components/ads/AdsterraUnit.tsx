@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useId, useRef } from "react";
 import { ADSTERRA_CDN } from "@/lib/ads-config";
+import { scheduleAdUnitLoad } from "@/lib/ad-load-queue";
 import { cn } from "@/lib/utils";
 
 interface AdsterraUnitProps {
@@ -14,8 +15,7 @@ interface AdsterraUnitProps {
 }
 
 /**
- * Single Adsterra atOptions unit — sets atOptions then loads invoke.js
- * immediately after its container (safe for multiple units per page).
+ * Loads one Adsterra atOptions unit: inline config then invoke.js (sequential queue).
  */
 export function AdsterraUnit({
   adKey,
@@ -30,31 +30,41 @@ export function AdsterraUnit({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    if (!adKey || !containerRef.current) return;
-    if (document.querySelector(`script[data-ad-key="${adKey}"][data-container="${containerId}"]`)) {
-      return;
-    }
+    const container = containerRef.current;
+    if (!adKey || !container || container.dataset.adLoaded === "1") return;
 
-    (window as Window & { atOptions?: Record<string, unknown> }).atOptions = {
-      key: adKey,
-      format,
-      height,
-      width,
-      params: {},
-      containerId,
-    };
+    container.dataset.adLoaded = "1";
 
-    const script = document.createElement("script");
-    script.src = `${cdn.replace(/\/$/, "")}/${adKey}/invoke.js`;
-    script.async = true;
-    script.setAttribute("data-cfasync", "false");
-    script.setAttribute("data-ad-key", adKey);
-    script.setAttribute("data-container", containerId);
-    containerRef.current.after(script);
+    scheduleAdUnitLoad(
+      () =>
+        new Promise((resolve) => {
+          const opts = {
+            key: adKey,
+            format,
+            height,
+            width,
+            params: {},
+            containerId,
+          };
 
-    return () => {
-      script.remove();
-    };
+          const configScript = document.createElement("script");
+          configScript.type = "text/javascript";
+          configScript.text = `atOptions = ${JSON.stringify(opts)};`;
+
+          const invokeScript = document.createElement("script");
+          invokeScript.src = `${cdn.replace(/\/$/, "")}/${adKey}/invoke.js`;
+          invokeScript.async = false;
+          invokeScript.setAttribute("data-cfasync", "false");
+          invokeScript.setAttribute("data-ad-slot", containerId);
+
+          const done = () => resolve();
+          invokeScript.onload = done;
+          invokeScript.onerror = done;
+
+          container.after(configScript);
+          configScript.after(invokeScript);
+        })
+    );
   }, [adKey, format, height, width, containerId, cdn]);
 
   return (

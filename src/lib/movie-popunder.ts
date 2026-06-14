@@ -1,6 +1,6 @@
 import { adsConfig } from "@/lib/ads-config";
 
-const SESSION_KEY = "nexusstream_movie_popunder_v2";
+const SESSION_KEY = "nexusstream_movie_popunder_v3";
 
 export function isMoviePopunderActive(): boolean {
   return adsConfig.enabled && !!adsConfig.moviePopunderScript;
@@ -16,7 +16,10 @@ function shouldTriggerPopunder(): boolean {
   return !sessionStorage.getItem(SESSION_KEY);
 }
 
-function injectPopunderScript(): void {
+/** Preload popunder script on app mount (idempotent). */
+export function preloadMoviePopunder(): void {
+  if (!isMoviePopunderActive() || typeof window === "undefined") return;
+
   const src = adsConfig.moviePopunderScript;
   if (document.querySelector(`script[data-popunder="${src}"]`)) return;
 
@@ -33,23 +36,23 @@ interface MovieLinkRouter {
 }
 
 /**
- * First movie click per session: load popunder, then navigate.
- * Delay navigation briefly so the ad script can attach to the click.
+ * First movie click per session: ensure popunder is loaded, then navigate.
  */
 export function handleMovieLinkClick(
   e: React.MouseEvent,
   href: string,
   router: MovieLinkRouter
 ): void {
-  if (!isMovieHref(href)) return;
+  if (!isMovieHref(href) || !isMoviePopunderActive()) return;
   if (!shouldTriggerPopunder()) return;
 
   e.preventDefault();
+  e.stopPropagation();
   sessionStorage.setItem(SESSION_KEY, "1");
-  injectPopunderScript();
 
-  // Let popunder script run before route change unloads the page
+  preloadMoviePopunder();
+
   window.setTimeout(() => {
     router.push(href);
-  }, 120);
+  }, 250);
 }
