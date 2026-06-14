@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { MediaCard } from "@/components/ui/MediaCard";
 import { CarouselSkeleton } from "@/components/ui/Skeleton";
+import { SiteBannerSlot } from "@/components/ads/SiteAds";
 import { searchMulti } from "@/lib/api-client";
 import type { TMDBMediaItem } from "@/types/tmdb";
 
@@ -46,6 +47,7 @@ function SearchResults() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-8 py-8">
+      <SiteBannerSlot slotId="search-top" className="mb-6" />
       {!query.trim() ? (
         <>
           <h1 className="text-2xl md:text-3xl font-bold mb-3">Search</h1>
@@ -84,6 +86,7 @@ function SearchResults() {
               />
             ))}
           </div>
+          <SiteBannerSlot slotId="search-after-results" className="mt-8" />
         </>
       )}
     </div>

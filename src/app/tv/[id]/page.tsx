@@ -8,6 +8,7 @@ import { CastCrewList, SimilarGrid } from "@/components/ui/CastCrewList";
 import { SeasonEpisodeSelector } from "@/components/ui/SeasonEpisodeSelector";
 import { DetailPageSkeleton } from "@/components/ui/Skeleton";
 import { InlinePlayerSection } from "@/components/player/InlinePlayerSection";
+import { SiteBannerSlot } from "@/components/ads/SiteAds";
 import {
   getTVDetails,
   getTVCredits,
@@ -245,6 +246,8 @@ export default function TVDetailPage() {
           />
         )}
 
+        <SiteBannerSlot slotId="tv-after-details" className="my-4" />
+
         <SeasonEpisodeSelector
           seasons={show.seasons}
           episodes={episodes}
@@ -255,6 +258,7 @@ export default function TVDetailPage() {
         />
 
         {credits && <CastCrewList cast={credits.cast} crew={credits.crew} />}
+        <SiteBannerSlot slotId="tv-before-similar" className="my-4" />
         <SimilarGrid title="Similar Shows" items={similar} mediaType="tv" />
       </div>
     </>

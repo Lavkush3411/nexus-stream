@@ -1,32 +1,40 @@
 "use client";
 
-import Script from "next/script";
-import { useEffect, useId } from "react";
+import { useLayoutEffect, useId, useRef } from "react";
 import { ADSTERRA_CDN } from "@/lib/ads-config";
+import { cn } from "@/lib/utils";
 
 interface AdsterraUnitProps {
   adKey: string;
   format?: "iframe" | "reflink";
   height?: number;
   width?: number;
+  cdn?: string;
   className?: string;
 }
 
 /**
- * Renders a single Adsterra display unit (banner or native).
- * Paste the key from atOptions or the hex string in your invoke.js URL.
+ * Single Adsterra atOptions unit — sets atOptions then loads invoke.js
+ * immediately after its container (safe for multiple units per page).
  */
 export function AdsterraUnit({
   adKey,
   format = "iframe",
   height = 90,
   width = 728,
+  cdn = ADSTERRA_CDN,
   className = "",
 }: AdsterraUnitProps) {
   const reactId = useId();
   const containerId = `adsterra-${adKey.slice(0, 8)}-${reactId.replace(/:/g, "")}`;
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (!adKey || !containerRef.current) return;
+    if (document.querySelector(`script[data-ad-key="${adKey}"][data-container="${containerId}"]`)) {
+      return;
+    }
+
     (window as Window & { atOptions?: Record<string, unknown> }).atOptions = {
       key: adKey,
       format,
@@ -35,18 +43,29 @@ export function AdsterraUnit({
       params: {},
       containerId,
     };
-  }, [adKey, format, height, width, containerId]);
+
+    const script = document.createElement("script");
+    script.src = `${cdn.replace(/\/$/, "")}/${adKey}/invoke.js`;
+    script.async = true;
+    script.setAttribute("data-cfasync", "false");
+    script.setAttribute("data-ad-key", adKey);
+    script.setAttribute("data-container", containerId);
+    containerRef.current.after(script);
+
+    return () => {
+      script.remove();
+    };
+  }, [adKey, format, height, width, containerId, cdn]);
 
   return (
     <div
-      className={`flex items-center justify-center overflow-hidden ${className}`}
+      className={cn("flex items-center justify-center overflow-hidden", className)}
       aria-hidden="true"
     >
-      <div id={containerId} className="min-h-[60px]" />
-      <Script
-        id={`adsterra-script-${adKey}`}
-        src={`${ADSTERRA_CDN}/${adKey}/invoke.js`}
-        strategy="afterInteractive"
+      <div
+        ref={containerRef}
+        id={containerId}
+        style={{ minHeight: height, width: "100%", maxWidth: width }}
       />
     </div>
   );

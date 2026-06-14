@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { CastCrewList, SimilarGrid } from "@/components/ui/CastCrewList";
 import { DetailPageSkeleton } from "@/components/ui/Skeleton";
 import { InlinePlayerSection } from "@/components/player/InlinePlayerSection";
-import { SiteMidBannerAd } from "@/components/ads/SiteAds";
+import { SiteBannerSlot } from "@/components/ads/SiteAds";
 import {
   getMovieDetails,
   getMovieCredits,
@@ -193,8 +193,10 @@ export default function MovieDetailPage() {
           />
         )}
 
+        <SiteBannerSlot slotId="movie-after-details" className="my-4" />
+
         {credits && <CastCrewList cast={credits.cast} crew={credits.crew} />}
-        <SiteMidBannerAd className="my-4" />
+        <SiteBannerSlot slotId="movie-before-similar" className="my-4" />
         <SimilarGrid title="Recommended" items={similar} mediaType="movie" />
       </div>
     </>

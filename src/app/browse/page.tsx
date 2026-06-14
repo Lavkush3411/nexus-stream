@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { MediaCard } from "@/components/ui/MediaCard";
 import { Button } from "@/components/ui/Button";
 import { CarouselSkeleton } from "@/components/ui/Skeleton";
-import { SiteMidBannerAd } from "@/components/ads/SiteAds";
+import { SiteBannerSlot } from "@/components/ads/SiteAds";
 import { discover, getGenres } from "@/lib/api-client";
 import type { MediaType, TMDBGenre, TMDBMediaItem } from "@/types/tmdb";
 
@@ -182,7 +182,7 @@ export default function BrowsePage() {
         </Button>
       </div>
 
-      <SiteMidBannerAd className="mb-8" />
+      <SiteBannerSlot slotId="browse-after-filters" className="mb-8" />
 
       {/* Results grid */}
       {loading ? (
@@ -223,6 +223,7 @@ export default function BrowsePage() {
               </Button>
             </div>
           )}
+          <SiteBannerSlot slotId="browse-after-grid" className="mt-8" />
         </>
       )}
     </div>

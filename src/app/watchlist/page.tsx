@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { MediaCard } from "@/components/ui/MediaCard";
 import { Button } from "@/components/ui/Button";
+import { SiteBannerSlot } from "@/components/ads/SiteAds";
 import { useUserData } from "@/context/UserDataContext";
 import type { TMDBMediaItem } from "@/types/tmdb";
 
@@ -35,6 +36,8 @@ export default function WatchlistPage() {
       <p className="text-muted mb-8">
         {watchlist.length} title{watchlist.length !== 1 ? "s" : ""} saved
       </p>
+
+      <SiteBannerSlot slotId="watchlist-top" className="mb-8" />
 
       {items.length === 0 ? (
         <div className="text-center py-16">
@@ -74,6 +77,8 @@ export default function WatchlistPage() {
           ))}
         </div>
       )}
+
+      <SiteBannerSlot slotId="watchlist-after-grid" className="mt-8" />
     </div>
   );
 }

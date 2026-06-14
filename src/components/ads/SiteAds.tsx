@@ -3,14 +3,12 @@
 import { AdsterraUnit } from "./AdsterraUnit";
 import { InvokeContainerAd } from "./InvokeContainerAd";
 import { PopunderAd } from "./PopunderAd";
+import { adsConfig, isNativeActive, isPopunderActive } from "@/lib/ads-config";
 import {
-  adsConfig,
-  isBannerActive,
-  isFooterBannerActive,
-  isMidBannerActive,
-  isNativeActive,
-  isPopunderActive,
-} from "@/lib/ads-config";
+  type BannerSlotId,
+  getBannerSlotUnit,
+  isBannerSlotActive,
+} from "@/lib/banner-slots";
 import { cn } from "@/lib/utils";
 
 function AdSlotShell({
@@ -29,23 +27,49 @@ function AdSlotShell({
   );
 }
 
-/** Leaderboard below the navbar — visible on all pages */
-export function SiteBannerAd() {
-  if (!isBannerActive()) return null;
+interface SiteBannerSlotProps {
+  slotId: BannerSlotId;
+  className?: string;
+}
+
+/** Render a registered banner slot by id */
+export function SiteBannerSlot({ slotId, className }: SiteBannerSlotProps) {
+  if (!isBannerSlotActive(slotId)) return null;
+
+  const unit = getBannerSlotUnit(slotId);
+  if (!unit) return null;
 
   return (
-    <AdSlotShell className="border-b border-white/5 bg-surface/40 border-t-0">
+    <AdSlotShell
+      className={cn(
+        slotId === "global-top" && "border-b border-white/5 bg-surface/40 border-t-0",
+        className
+      )}
+    >
       <AdsterraUnit
-        adKey={adsConfig.bannerKey}
-        height={90}
-        width={728}
+        adKey={unit.key}
+        width={unit.width}
+        height={unit.height}
+        cdn={unit.cdn}
         className="max-w-full [&_iframe]:max-w-full"
       />
     </AdSlotShell>
   );
 }
 
-/** Native unit — invoke.js + container div */
+export function SiteBannerAd() {
+  return <SiteBannerSlot slotId="global-top" />;
+}
+
+export function SiteFooterBannerAd() {
+  return <SiteBannerSlot slotId="global-footer" />;
+}
+
+export function SiteMidBannerAd({ className }: { className?: string }) {
+  return <SiteBannerSlot slotId="home-after-top-rated" className={className} />;
+}
+
+/** Native unit — invoke.js + container div (not counted as banner) */
 export function SiteNativeAd({ className }: { className?: string }) {
   if (!isNativeActive()) return null;
 
@@ -72,43 +96,7 @@ export function SiteNativeAd({ className }: { className?: string }) {
   );
 }
 
-/** Mid-page banner — browse, detail pages, home */
-export function SiteMidBannerAd({ className }: { className?: string }) {
-  if (!isMidBannerActive()) return null;
-
-  const { midBanner } = adsConfig;
-
-  return (
-    <AdSlotShell className={className}>
-      <InvokeContainerAd
-        adKey={midBanner.key}
-        cdn={midBanner.cdn}
-        minHeight={90}
-        className="max-w-full [&_iframe]:max-w-full"
-      />
-    </AdSlotShell>
-  );
-}
-
-/** Footer banner — all pages */
-export function SiteFooterBannerAd() {
-  if (!isFooterBannerActive()) return null;
-
-  const { footerBanner } = adsConfig;
-
-  return (
-    <AdSlotShell>
-      <InvokeContainerAd
-        adKey={footerBanner.key}
-        cdn={footerBanner.cdn}
-        minHeight={90}
-        className="max-w-full [&_iframe]:max-w-full"
-      />
-    </AdSlotShell>
-  );
-}
-
-/** Mount once in root layout — optional Adsterra popunder invoke.js */
+/** Optional global Adsterra popunder (NEXT_PUBLIC_ADSTERRA_POPUNDER_KEY) */
 export function SiteAdsProvider() {
   if (!isPopunderActive()) return null;
   return <PopunderAd />;

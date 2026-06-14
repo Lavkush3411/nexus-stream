@@ -25,12 +25,17 @@ export interface EmbedOptions {
 /** Current official VidSrc embed bases (best-first). */
 const OFFICIAL_BASES = [
   process.env.NEXT_PUBLIC_VIDSRC_BASE,
-  "https://vidsrcme.su",
+  "https://vsembed.ru",
   "https://vidsrc.me",
   "https://vidsrc-embed.ru",
   "https://vidsrc-embed.su",
+  "https://vidsrcme.su",
   "https://vsrc.su",
 ].filter(Boolean) as string[];
+
+function supportsQueryEmbed(base: string): boolean {
+  return /vidsrc\.me|vidsrc-embed|vsembed|vsrc\.su/i.test(base);
+}
 
 function uniqueUrls(urls: string[]): string[] {
   return [...new Set(urls.filter(Boolean))];
@@ -85,11 +90,11 @@ export function getEmbedFallbackUrls(options: EmbedOptions): string[] {
   const ids = imdbId ? [imdbId, String(tmdbId)] : [String(tmdbId)];
 
   for (const base of OFFICIAL_BASES) {
-    // Query format (preferred on vidsrc.me / vidsrc-embed.ru)
-    if (base.includes("vidsrc.me") || base.includes("vidsrc-embed")) {
+    // Query format (?imdb= / ?tmdb=) — preferred on most current mirrors
+    if (supportsQueryEmbed(base)) {
       urls.push(queryEmbed(base, type, tmdbId, imdbId, season, episode));
     }
-    // Path format (works on vidsrcme.su, vsrc.su)
+    // Path format (/embed/movie/{id}) — fallback
     for (const id of ids) {
       urls.push(pathEmbed(base, type, id, season, episode));
     }
