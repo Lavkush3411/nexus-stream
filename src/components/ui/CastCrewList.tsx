@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getImageUrl } from "@/lib/tmdb";
+import { handleMovieLinkClick } from "@/lib/movie-popunder";
 import type { TMDBCastMember, TMDBCrewMember } from "@/types/tmdb";
 
 interface CastCrewListProps {
@@ -59,6 +61,8 @@ interface SimilarGridProps {
 }
 
 export function SimilarGrid({ title, items, mediaType }: SimilarGridProps) {
+  const router = useRouter();
+
   if (items.length === 0) return null;
 
   return (
@@ -69,7 +73,14 @@ export function SimilarGrid({ title, items, mediaType }: SimilarGridProps) {
           const name = item.title ?? item.name ?? "Untitled";
           const href = mediaType === "movie" ? `/movie/${item.id}` : `/tv/${item.id}`;
           return (
-            <Link key={item.id} href={href} className="group">
+            <Link
+              key={item.id}
+              href={href}
+              onClick={(e) => {
+                if (mediaType === "movie") handleMovieLinkClick(e, href, router);
+              }}
+              className="group"
+            >
               <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-surface-light">
                 <Image
                   src={getImageUrl(item.poster_path, "w342")}

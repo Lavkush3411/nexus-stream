@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { getImageUrl } from "@/lib/tmdb";
 import { formatRating, getDisplayTitle, truncate } from "@/lib/utils";
+import { handleMovieLinkClick } from "@/lib/movie-popunder";
 import type { TMDBMediaItem } from "@/types/tmdb";
 
 interface HeroBannerProps {
@@ -13,6 +15,7 @@ interface HeroBannerProps {
 }
 
 export function HeroBanner({ item, onPlay }: HeroBannerProps) {
+  const router = useRouter();
   const title = getDisplayTitle(item);
   const mediaType = item.media_type ?? (item.title ? "movie" : "tv");
   const href = mediaType === "movie" ? `/movie/${item.id}` : `/tv/${item.id}`;
@@ -61,7 +64,12 @@ export function HeroBanner({ item, onPlay }: HeroBannerProps) {
                 </svg>
                 Play Now
               </Button>
-              <Link href={href}>
+              <Link
+                href={href}
+                onClick={(e) => {
+                  if (mediaType === "movie") handleMovieLinkClick(e, href, router);
+                }}
+              >
                 <Button variant="secondary" size="lg">
                   More Info
                 </Button>

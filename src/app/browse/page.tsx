@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { MediaCard } from "@/components/ui/MediaCard";
 import { Button } from "@/components/ui/Button";
 import { CarouselSkeleton } from "@/components/ui/Skeleton";
+import { SiteMidBannerAd } from "@/components/ads/SiteAds";
 import { discover, getGenres } from "@/lib/api-client";
 import type { MediaType, TMDBGenre, TMDBMediaItem } from "@/types/tmdb";
 
@@ -180,6 +181,8 @@ export default function BrowsePage() {
           Reset Filters
         </Button>
       </div>
+
+      <SiteMidBannerAd className="mb-8" />
 
       {/* Results grid */}
       {loading ? (

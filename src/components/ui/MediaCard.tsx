@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getImageUrl } from "@/lib/tmdb";
 import { cn, formatRating, getDisplayTitle } from "@/lib/utils";
+import { handleMovieLinkClick, isMovieHref } from "@/lib/movie-popunder";
 import type { TMDBMediaItem } from "@/types/tmdb";
 
 interface MediaCardProps {
@@ -22,14 +24,22 @@ export function MediaCard({
   className,
   priority = false,
 }: MediaCardProps) {
+  const router = useRouter();
   const title = getDisplayTitle(item);
   const mediaType = item.media_type ?? (item.title ? "movie" : "tv");
   const linkHref =
     href ?? (mediaType === "movie" ? `/movie/${item.id}` : `/tv/${item.id}`);
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (mediaType === "movie" || isMovieHref(linkHref)) {
+      handleMovieLinkClick(e, linkHref, router);
+    }
+  };
+
   return (
     <Link
       href={linkHref}
+      onClick={handleClick}
       className={cn(
         "group flex-shrink-0 w-[160px] sm:w-[180px] transition-transform duration-300 hover:scale-[1.03]",
         className

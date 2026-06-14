@@ -12,6 +12,7 @@ import {
   CarouselSkeleton,
 } from "@/components/ui/Skeleton";
 import { InlinePlayerSection } from "@/components/player/InlinePlayerSection";
+import { SiteNativeAd, SiteMidBannerAd } from "@/components/ads/SiteAds";
 import { getTrending, getTopRated, getLatestTV, getMovieExternalIds } from "@/lib/api-client";
 import { getEmbedFallbackUrls } from "@/lib/vidsrc";
 import { getDisplayTitle } from "@/lib/utils";
@@ -141,7 +142,9 @@ export default function HomePage() {
       )}
 
       <MediaCarousel title="Trending Now" items={trending} />
+      <SiteNativeAd />
       <MediaCarousel title="Top Rated Movies" items={topRated} />
+      <SiteMidBannerAd />
       <MediaCarousel title="Latest TV Drops" items={latestTV} />
     </>
   );

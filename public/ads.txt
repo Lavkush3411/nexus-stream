@@ -1,0 +1,2 @@
+# Paste the line Adsterra gives you after site approval, e.g.:
+# adsterra.com, XXXXXXXXXXXXX, DIRECT
