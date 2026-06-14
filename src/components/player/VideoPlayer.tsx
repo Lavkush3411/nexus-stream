@@ -7,7 +7,7 @@
  * detects frameElement.sandbox and redirects to /sbx.html which displays
  * "This media is unavailable at the moment." We therefore cannot use the
  * sandbox attribute here. Security is handled by loading the iframe only
- * after an explicit user "Play" click (CinemaMode) rather than on page load.
+ * after an explicit user "Play" click rather than on page load.
  */
 
 import { useState } from "react";

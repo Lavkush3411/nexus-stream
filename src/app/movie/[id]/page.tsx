@@ -6,8 +6,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { CastCrewList, SimilarGrid } from "@/components/ui/CastCrewList";
 import { DetailPageSkeleton } from "@/components/ui/Skeleton";
-import { CinemaMode } from "@/components/player/CinemaMode";
-import { VideoPlayer } from "@/components/player/VideoPlayer";
+import { InlinePlayerSection } from "@/components/player/InlinePlayerSection";
 import {
   getMovieDetails,
   getMovieCredits,
@@ -35,8 +34,7 @@ export default function MovieDetailPage() {
   const [credits, setCredits] = useState<TMDBCredits | null>(null);
   const [similar, setSimilar] = useState<TMDBMediaItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [cinemaOpen, setCinemaOpen] = useState(false);
-  const [inlinePlayer, setInlinePlayer] = useState(false);
+  const [playerOpen, setPlayerOpen] = useState(false);
   const [embedUrls, setEmbedUrls] = useState<string[]>([]);
 
   useEffect(() => {
@@ -74,8 +72,7 @@ export default function MovieDetailPage() {
   const fallbackEmbedUrls = embedUrls.slice(1);
 
   const handlePlay = () => {
-    setInlinePlayer(true);
-    setCinemaOpen(true);
+    setPlayerOpen(true);
     addToHistory({
       id: movie.id,
       mediaType: "movie",
@@ -108,7 +105,6 @@ export default function MovieDetailPage() {
 
   return (
     <>
-      {/* Backdrop hero */}
       <div className="relative h-[50vh] min-h-[360px] w-full">
         <Image
           src={getImageUrl(movie.backdrop_path, "w1280")}
@@ -121,10 +117,8 @@ export default function MovieDetailPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/30" />
       </div>
 
-      {/* Detail content */}
       <div className="mx-auto max-w-7xl px-4 md:px-8 -mt-48 relative z-10 pb-12">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Poster */}
           <div className="hidden md:block flex-shrink-0 w-64">
             <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10">
               <Image
@@ -137,7 +131,6 @@ export default function MovieDetailPage() {
             </div>
           </div>
 
-          {/* Info */}
           <div className="flex-1 pt-4 md:pt-32">
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
               {movie.title}
@@ -177,7 +170,7 @@ export default function MovieDetailPage() {
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
-                Play Now
+                {playerOpen ? "Playing" : "Play Now"}
               </Button>
               <Button
                 variant={inWatchlist ? "outline" : "secondary"}
@@ -187,32 +180,21 @@ export default function MovieDetailPage() {
                 {inWatchlist ? "✓ In Watchlist" : "+ Add to Watchlist"}
               </Button>
             </div>
-
-            {/* Inline player section */}
-            {inlinePlayer && !cinemaOpen && primaryEmbedUrl && (
-              <div className="mt-8">
-                <VideoPlayer
-                  embedUrl={primaryEmbedUrl}
-                  fallbackUrls={fallbackEmbedUrls}
-                  title={movie.title}
-                />
-              </div>
-            )}
           </div>
         </div>
+
+        {playerOpen && primaryEmbedUrl && (
+          <InlinePlayerSection
+            embedUrl={primaryEmbedUrl}
+            fallbackUrls={fallbackEmbedUrls}
+            title={movie.title}
+            onClose={() => setPlayerOpen(false)}
+          />
+        )}
 
         {credits && <CastCrewList cast={credits.cast} crew={credits.crew} />}
         <SimilarGrid title="Recommended" items={similar} mediaType="movie" />
       </div>
-
-      {cinemaOpen && primaryEmbedUrl && (
-        <CinemaMode
-          embedUrl={primaryEmbedUrl}
-          fallbackUrls={fallbackEmbedUrls}
-          title={movie.title}
-          onClose={() => setCinemaOpen(false)}
-        />
-      )}
     </>
   );
 }

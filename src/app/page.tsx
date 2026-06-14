@@ -11,7 +11,7 @@ import {
   HeroSkeleton,
   CarouselSkeleton,
 } from "@/components/ui/Skeleton";
-import { CinemaMode } from "@/components/player/CinemaMode";
+import { InlinePlayerSection } from "@/components/player/InlinePlayerSection";
 import { getTrending, getTopRated, getLatestTV, getMovieExternalIds } from "@/lib/api-client";
 import { getEmbedFallbackUrls } from "@/lib/vidsrc";
 import { getDisplayTitle } from "@/lib/utils";
@@ -120,6 +120,17 @@ export default function HomePage() {
     <>
       {heroItem && <HeroBanner item={heroItem} onPlay={handleHeroPlay} />}
 
+      {playerOpen && embedUrls[0] && (
+        <div className="mx-auto max-w-7xl px-4 md:px-8 -mt-4 mb-2">
+          <InlinePlayerSection
+            embedUrl={embedUrls[0]}
+            fallbackUrls={embedUrls.slice(1)}
+            title={playerTitle}
+            onClose={() => setPlayerOpen(false)}
+          />
+        </div>
+      )}
+
       {continueItems.length > 0 && (
         <MediaCarousel
           title="Continue Watching"
@@ -132,15 +143,6 @@ export default function HomePage() {
       <MediaCarousel title="Trending Now" items={trending} />
       <MediaCarousel title="Top Rated Movies" items={topRated} />
       <MediaCarousel title="Latest TV Drops" items={latestTV} />
-
-      {playerOpen && embedUrls[0] && (
-        <CinemaMode
-          embedUrl={embedUrls[0]}
-          fallbackUrls={embedUrls.slice(1)}
-          title={playerTitle}
-          onClose={() => setPlayerOpen(false)}
-        />
-      )}
     </>
   );
 }

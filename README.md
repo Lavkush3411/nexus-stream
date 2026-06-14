@@ -53,7 +53,7 @@ src/
 │   └── watchlist/          # Saved titles
 ├── components/
 │   ├── layout/             # Navbar, Footer
-│   ├── player/             # VideoPlayer, CinemaMode
+│   ├── player/             # VideoPlayer, InlinePlayerSection
 │   └── ui/                 # Cards, carousels, skeletons, etc.
 ├── context/                # LocalStorage-backed user data
 ├── lib/                    # API client, TMDB utils, VidSrc URLs

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { CastCrewList, SimilarGrid } from "@/components/ui/CastCrewList";
 import { SeasonEpisodeSelector } from "@/components/ui/SeasonEpisodeSelector";
 import { DetailPageSkeleton } from "@/components/ui/Skeleton";
-import { CinemaMode } from "@/components/player/CinemaMode";
+import { InlinePlayerSection } from "@/components/player/InlinePlayerSection";
 import {
   getTVDetails,
   getTVCredits,
@@ -44,7 +44,7 @@ export default function TVDetailPage() {
   const [episodes, setEpisodes] = useState<TMDBEpisode[]>([]);
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [cinemaOpen, setCinemaOpen] = useState(false);
+  const [playerOpen, setPlayerOpen] = useState(false);
   const [embedUrls, setEmbedUrls] = useState<string[]>([]);
   const [imdbId, setImdbId] = useState<string | null>(null);
   const [playerTitle, setPlayerTitle] = useState("");
@@ -101,7 +101,7 @@ export default function TVDetailPage() {
     setEmbedUrls(urls);
     setPlayerTitle(show.name);
     setPlayerSubtitle(`S${season} E${episode} — ${episodeName}`);
-    setCinemaOpen(true);
+    setPlayerOpen(true);
 
     addToHistory({
       id: show.id,
@@ -235,6 +235,16 @@ export default function TVDetailPage() {
           </div>
         </div>
 
+        {playerOpen && embedUrls[0] && (
+          <InlinePlayerSection
+            embedUrl={embedUrls[0]}
+            fallbackUrls={embedUrls.slice(1)}
+            title={playerTitle}
+            subtitle={playerSubtitle}
+            onClose={() => setPlayerOpen(false)}
+          />
+        )}
+
         <SeasonEpisodeSelector
           seasons={show.seasons}
           episodes={episodes}
@@ -247,16 +257,6 @@ export default function TVDetailPage() {
         {credits && <CastCrewList cast={credits.cast} crew={credits.crew} />}
         <SimilarGrid title="Similar Shows" items={similar} mediaType="tv" />
       </div>
-
-      {cinemaOpen && embedUrls[0] && (
-        <CinemaMode
-          embedUrl={embedUrls[0]}
-          fallbackUrls={embedUrls.slice(1)}
-          title={playerTitle}
-          subtitle={playerSubtitle}
-          onClose={() => setCinemaOpen(false)}
-        />
-      )}
     </>
   );
 }
